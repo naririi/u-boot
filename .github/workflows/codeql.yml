@@ -1,0 +1,44 @@
+name: "CodeQL Analysis"
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+  workflow_dispatch:   # permette di eseguirlo manualmente
+
+jobs:
+  analyze:
+    name: Analyze C/C++
+    runs-on: ubuntu-latest
+
+    permissions:
+      actions: read
+      contents: read
+      security-events: write   # necessario per caricare i risultati
+
+    steps:
+
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: cpp
+        config-file: ./.github/codeql/codeql-config.yml
+
+    - name: Install build dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y gcc make bison flex libssl-dev
+
+    - name: Build U-Boot (manual, per CodeQL tracing)
+      run: |
+        make sandbox_defconfig
+        make -j$(nproc)
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+      with:
+        category: "/language:cpp"
