@@ -17,7 +17,7 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4        # v3 → v4
+      uses: actions/checkout@v4
 
     - name: Install build dependencies
       run: |
@@ -29,17 +29,19 @@ jobs:
           swig device-tree-compiler
 
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@v4     # v3 → v4
+      uses: github/codeql-action/init@v4
       with:
-        languages: c-cpp                      # "cpp" → "c-cpp"
+        languages: c-cpp
+        build-mode: manual        # <-- AGGIUNTO: obbligatorio in v4
         config-file: ./.github/codeql/codeql-config.yml
 
+    # Con build-mode: manual, il build va DOPO init
     - name: Build U-Boot
       run: |
         make sandbox_defconfig
-        make -j$(nproc)
+        make -j$(nproc) 2>&1 | tail -50   # mostra gli ultimi 50 log se fallisce
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v4  # v3 → v4
+      uses: github/codeql-action/analyze@v4
       with:
-        category: "/language:c-cpp"           # "cpp" → "c-cpp"
+        category: "/language:c-cpp"
