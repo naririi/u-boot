@@ -1,5 +1,5 @@
 import cpp
-import semmle.code.cpp.dataflow.TaintTracking
+import semmle.code.cpp.dataflow.new.TaintTracking
 import semmle.code.cpp.controlflow.Guards
 
 class NetworkByteSwap extends Expr {
