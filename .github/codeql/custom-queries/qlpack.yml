@@ -1,4 +1,4 @@
 name: custom-queries
 version: 1.0.0
 dependencies:
-  codeql/cpp-all: "*"
+  codeql/cpp-all: "1.3.8"
