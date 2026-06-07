@@ -10,7 +10,6 @@
 import cpp
 import semmle.code.cpp.dataflow.new.DataFlow
 import semmle.code.cpp.dataflow.new.TaintTracking
-// RIMOSSO: import semmle.code.cpp.controlflow.Guards  ← causa del crash
 
 class NetworkByteSwap extends Expr {
   NetworkByteSwap() {
@@ -19,7 +18,16 @@ class NetworkByteSwap extends Expr {
       (m.getName() = "ntohs" or
        m.getName() = "ntohl" or
        m.getName() = "ntohll") and
-      this = inv.getExpr()
+      this = inv.getExpr() and
+      // FIX 1: escludi invocazioni già dentro un'altra macro ntoh*
+      // (evita di contare due volte la stessa)
+      not exists(MacroInvocation outer |
+        (outer.getMacro().getName() = "ntohs" or
+         outer.getMacro().getName() = "ntohl" or
+         outer.getMacro().getName() = "ntohll") and
+        outer != inv and
+        inv.getExpr().getParent+() = outer.getExpr()
+      )
     )
   }
 }
@@ -36,11 +44,15 @@ module MyConfig implements DataFlow::ConfigSig {
     )
   }
 
-  // Usa RelationalOperation invece di GuardCondition
-  // Cattura i casi: if (len > MAX), if (len < SIZE), ecc.
+  // FIX 2: barrier più robusta — usa getAChild+ invece di getAnOperand
+  // per catturare anche espressioni nidificate nelle comparazioni
   predicate isBarrier(DataFlow::Node node) {
-    exists(RelationalOperation cmp |
-      cmp.getAnOperand() = node.asExpr()
+    exists(RelationalOperation rel |
+      rel.getAChild+() = node.asExpr()
+    )
+    or
+    exists(EqualityOperation eq |    // cattura anche == e !=
+      eq.getAChild+() = node.asExpr()
     )
   }
 }
