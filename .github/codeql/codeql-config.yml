@@ -1,7 +1,0 @@
-name: "Custom CodeQL Config"
-
-queries:
-  - uses: ./.github/codeql/custom-queries/taint_tracking.ql
-
-paths-ignore:
-  - "**/*.test.*"

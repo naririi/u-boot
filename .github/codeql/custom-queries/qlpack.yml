@@ -1,4 +1,4 @@
-name: custom-queries
-version: 1.0.0
+name: uboot-custom-queries
+version: 0.0.1
 dependencies:
-  codeql/cpp-all: "2.20.4"
+  codeql/cpp-all: "*"
