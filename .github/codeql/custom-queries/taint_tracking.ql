@@ -8,9 +8,9 @@
  */
 
 import cpp
-import semmle.code.cpp.dataflow.new.DataFlow      // <-- aggiunto esplicito
-import semmle.code.cpp.dataflow.new.TaintTracking  // <-- "new" API
-import semmle.code.cpp.controlflow.Guards
+import semmle.code.cpp.dataflow.new.DataFlow
+import semmle.code.cpp.dataflow.new.TaintTracking
+// RIMOSSO: import semmle.code.cpp.controlflow.Guards  ← causa del crash
 
 class NetworkByteSwap extends Expr {
   NetworkByteSwap() {
@@ -36,9 +36,11 @@ module MyConfig implements DataFlow::ConfigSig {
     )
   }
 
+  // Usa RelationalOperation invece di GuardCondition
+  // Cattura i casi: if (len > MAX), if (len < SIZE), ecc.
   predicate isBarrier(DataFlow::Node node) {
-    exists(GuardCondition gc |
-      gc.getAChild*() = node.asExpr()
+    exists(RelationalOperation cmp |
+      cmp.getAnOperand() = node.asExpr()
     )
   }
 }
@@ -48,5 +50,5 @@ import MyTaint::PathGraph
 
 from MyTaint::PathNode source, MyTaint::PathNode sink
 where MyTaint::flowPath(source, sink)
-select sink.getNode(), source, sink,  // <-- sink.getNode() non solo sink
+select sink.getNode(), source, sink,
   "Network byte swap flows to memcpy"
